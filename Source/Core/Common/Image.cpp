@@ -12,6 +12,14 @@
 #include "Common/CommonTypes.h"
 #include "Common/IOFile.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+#include <Common/FileUtil.h>
+
 namespace Common
 {
 bool LoadPNG(const std::vector<u8>& input, std::vector<u8>* data_out, u32* width_out,
@@ -81,6 +89,26 @@ bool SavePNG(const std::string& path, const u8* input, ImageByteFormat format, u
   File::IOFile outfile(path, "wb");
   if (!outfile)
     return false;
+
+  // Frog hook begins here
+
+  // create new path which points to the custom textures load path
+  std::string loadPath = path;
+  loadPath = loadPath.replace(loadPath.find("Dump"), 4, "Load");
+
+  // these have the width and height of the texture we load in
+  int i_width, i_height;
+
+  // we load in the frog, create an empty char* with the size we want to have resize the frogImage to our desired height and then write it
+  unsigned char* frogImage = stbi_load((File::GetUserPath(D_LOAD_IDX) + "frog.png").c_str(), &i_width, &i_height, nullptr, STBI_rgb_alpha);
+  unsigned char* frogImageOut = new unsigned char[width * height * 4];
+  stbir_resize_uint8(frogImage, i_width, i_height, 0, frogImageOut, width, height, 0, 4);
+  stbi_write_png(loadPath.c_str(), width, height, STBI_rgb_alpha, frogImageOut, width * STBI_rgb_alpha);
+
+  // free our stuff so we don't memleak
+  stbi_image_free(frogImage);
+  delete frogImageOut;
+
   return outfile.WriteBytes(buffer.data(), size);
 }
 

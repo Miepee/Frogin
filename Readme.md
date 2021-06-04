@@ -1,3 +1,12 @@
+# Frogin
+A fork of Dolphin, a GameCube and Wii Emulator, that while dumping custom textures automatically creates a frog the size of the texture it dumped.
+If you want to use a different texture than the default twemoji frog, go to `Dolphin's Userpath/Load` and put in / replace the `frog.png` texture in there.
+
+![FroginPreview1](https://cdn.discordapp.com/attachments/509717926807601182/850407843916283924/unknown.png)  
+![FroginPreview2](https://cdn.discordapp.com/attachments/509717926807601182/850407799526522930/unknown.png)
+
+Original Dolphin Readme below:
+
 # Dolphin - A GameCube and Wii Emulator
 
 [Homepage](https://dolphin-emu.org/) | [Project Site](https://github.com/dolphin-emu/dolphin) | [Buildbot](https://dolphin.ci) | [Forums](https://forums.dolphin-emu.org/) | [Wiki](https://wiki.dolphin-emu.org/) | [Issue Tracker](https://bugs.dolphin-emu.org/projects/emulator/issues) | [Coding Style](https://github.com/dolphin-emu/dolphin/blob/master/Contributing.md) | [Transifex Page](https://www.transifex.com/projects/p/dolphin-emu/)
