@@ -43,6 +43,7 @@ private:
   GraphicsBool* m_dump_xfb_target;
   GraphicsBool* m_disable_vram_copies;
   GraphicsBool* m_load_custom_textures;
+  GraphicsBool* m_resize_texture_for_dumps;
 
   // Texture dumping
   GraphicsBool* m_dump_textures;

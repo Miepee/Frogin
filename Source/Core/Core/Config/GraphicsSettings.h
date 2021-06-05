@@ -42,6 +42,7 @@ extern const Info<bool> GFX_HIRES_TEXTURES;
 extern const Info<bool> GFX_CACHE_HIRES_TEXTURES;
 extern const Info<bool> GFX_DUMP_EFB_TARGET;
 extern const Info<bool> GFX_DUMP_XFB_TARGET;
+extern const Info<bool> GFX_RESIZE_TEXTURE_FOR_DUMPS;
 extern const Info<bool> GFX_DUMP_FRAMES_AS_IMAGES;
 extern const Info<bool> GFX_USE_FFV1;
 extern const Info<std::string> GFX_DUMP_FORMAT;

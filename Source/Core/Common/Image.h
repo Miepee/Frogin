@@ -22,6 +22,9 @@ enum class ImageByteFormat
 
 bool SavePNG(const std::string& path, const u8* input, ImageByteFormat format, u32 width,
              u32 height, int stride = 0);
+
+void ResizeCustomTextureAndSaveItToLoadPath(const std::string& path, u32 width, u32 height);
+
 bool ConvertRGBAToRGBAndSavePNG(const std::string& path, const u8* input, u32 width, u32 height,
                                 int stride = 0);
 

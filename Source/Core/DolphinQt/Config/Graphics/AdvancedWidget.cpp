@@ -73,6 +73,8 @@ void AdvancedWidget::CreateWidgets()
   m_dump_xfb_target = new GraphicsBool(tr("Dump XFB Target"), Config::GFX_DUMP_XFB_TARGET);
   m_disable_vram_copies =
       new GraphicsBool(tr("Disable EFB VRAM Copies"), Config::GFX_HACK_DISABLE_COPY_TO_VRAM);
+  m_resize_texture_for_dumps =
+      new GraphicsBool(tr("Resize Custom Texture for Dumps"), Config::GFX_RESIZE_TEXTURE_FOR_DUMPS);
 
   utility_layout->addWidget(m_load_custom_textures, 0, 0);
   utility_layout->addWidget(m_prefetch_custom_textures, 0, 1);
@@ -80,6 +82,7 @@ void AdvancedWidget::CreateWidgets()
   utility_layout->addWidget(m_disable_vram_copies, 1, 0);
 
   utility_layout->addWidget(m_dump_efb_target, 1, 1);
+  utility_layout->addWidget(m_resize_texture_for_dumps, 2, 0);
   utility_layout->addWidget(m_dump_xfb_target, 2, 1);
 
   // Texture dumping
@@ -243,6 +246,10 @@ void AdvancedWidget::AddDescriptions()
       QT_TR_NOOP("Disables the VRAM copy of the EFB, forcing a round-trip to RAM. Inhibits all "
                  "upscaling.<br><br><dolphin_emphasis>If unsure, leave this "
                  "unchecked.</dolphin_emphasis>");
+  static const char TR_RESIZE_TEXTURE_FOR_DUMPS_DESCRIPTION[] =
+      QT_TR_NOOP("Uses the texture at User/Load/custom.png and resizes it to fit the dimensions of a dumped Texture."
+                 "<br><b>This will overwrite all custom textures you created!</b><br><br>"
+                 "<dolphin_emphasis>If unsure, leave this unchecked.</dolphin_emphasis>");
   static const char TR_INTERNAL_RESOLUTION_FRAME_DUMPING_DESCRIPTION[] = QT_TR_NOOP(
       "Creates frame dumps and screenshots at the internal resolution of the renderer, rather than "
       "the size of the window it is displayed within.<br><br>If the aspect ratio is "
@@ -295,6 +302,7 @@ void AdvancedWidget::AddDescriptions()
   m_prefetch_custom_textures->SetDescription(tr(TR_CACHE_CUSTOM_TEXTURE_DESCRIPTION));
   m_dump_efb_target->SetDescription(tr(TR_DUMP_EFB_DESCRIPTION));
   m_dump_xfb_target->SetDescription(tr(TR_DUMP_XFB_DESCRIPTION));
+  m_resize_texture_for_dumps->SetDescription(tr(TR_RESIZE_TEXTURE_FOR_DUMPS_DESCRIPTION));
   m_disable_vram_copies->SetDescription(tr(TR_DISABLE_VRAM_COPIES_DESCRIPTION));
   m_use_fullres_framedumps->SetDescription(tr(TR_INTERNAL_RESOLUTION_FRAME_DUMPING_DESCRIPTION));
 #ifdef HAVE_FFMPEG

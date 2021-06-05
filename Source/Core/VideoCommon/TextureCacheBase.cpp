@@ -1315,7 +1315,7 @@ void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
 {
   std::string szDir = File::GetUserPath(D_DUMPTEXTURES_IDX) + SConfig::GetInstance().GetGameID();
   std::string hiresDir = File::GetUserPath(D_HIRESTEXTURES_IDX) + SConfig::GetInstance().GetGameID();
-  std::string frogPath = File::GetUserPath(D_LOAD_IDX) + "frog.png";
+  std::string frogPath = File::GetUserPath(D_LOAD_IDX) + "custom.png";
 
   // if frogFile does not exist, we generate it.
   if (!File::IsFile(frogPath))
@@ -1339,21 +1339,22 @@ void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
       return;
     basename += fmt::format("_mip{}", level);
   }
-  else
-  {
-    if (!g_ActiveConfig.bDumpBaseTextures)
-      return;
-  }
 
   const std::string filename = fmt::format("{}/{}.png", szDir, basename);
   const std::string frogFilename = fmt::format("{}/{}.png", hiresDir, basename);
+
+  bool doesFileExist = File::Exists(filename);
+  bool doesCustomFileExist = File::Exists(frogFilename);
+
   // if both the frog copy and the original dump does not exist, we dump it
-  // this currently means, that users who already dumped stuff, will experience stutter again, because it'll basically redump
-  // the frog stuff should probably be put into another method, so we can do that independenantly
-  if (File::Exists(filename) && File::Exists(frogFilename))
+  if (doesFileExist && doesCustomFileExist)
     return;
 
-  entry->texture->Save(filename, level);
+  if (!g_ActiveConfig.bDumpBaseTextures && !doesFileExist)
+    entry->texture->Save(filename, level);
+
+  if (g_ActiveConfig.bResizeTextureForDumps && !doesCustomFileExist)
+    entry->texture->StretchCustomAndSave(filename, level);
 }
 
 static void SetSamplerState(u32 index, float custom_tex_scale, bool custom_tex,
@@ -1994,7 +1995,7 @@ TextureCacheBase::GetTexture(const int textureCacheSafetyColorSampleSize, Textur
   entry->SetNotCopy();
 
   std::string basename;
-  if (g_ActiveConfig.bDumpTextures && !hires_tex)
+  if (!hires_tex)
   {
     basename = HiresTexture::GenBaseName(texture_info, true);
   }
@@ -2044,7 +2045,7 @@ TextureCacheBase::GetTexture(const int textureCacheSafetyColorSampleSize, Textur
   entry->has_arbitrary_mips = hires_tex ? hires_tex->HasArbitraryMipmaps() :
                                           arbitrary_mip_detector.HasArbitraryMipmaps(dst_buffer);
 
-  if (g_ActiveConfig.bDumpTextures && !hires_tex)
+  if (!hires_tex)
   {
     for (u32 level = 0; level < texLevels; ++level)
     {

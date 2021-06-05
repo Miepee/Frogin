@@ -41,6 +41,8 @@ public:
   bool IsMultisampled() const { return m_config.IsMultisampled(); }
   bool Save(const std::string& filename, unsigned int level);
 
+  void StretchCustomAndSave(const std::string& filename, unsigned int level);
+
   static bool IsCompressedFormat(AbstractTextureFormat format);
   static bool IsDepthFormat(AbstractTextureFormat format);
   static bool IsStencilFormat(AbstractTextureFormat format);
