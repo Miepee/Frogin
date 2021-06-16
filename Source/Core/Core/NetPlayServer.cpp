@@ -32,15 +32,18 @@
 #include "Common/StringUtil.h"
 #include "Common/UPnP.h"
 #include "Common/Version.h"
+
 #include "Core/ActionReplay.h"
 #include "Core/Config/GraphicsSettings.h"
 #include "Core/Config/MainSettings.h"
 #include "Core/Config/NetplaySettings.h"
 #include "Core/Config/SYSCONFSettings.h"
+#include "Core/Config/SessionSettings.h"
 #include "Core/ConfigLoaders/GameConfigLoader.h"
 #include "Core/ConfigManager.h"
 #include "Core/GeckoCode.h"
 #include "Core/GeckoCodeConfig.h"
+#include "Core/HW/GCMemcard/GCMemcard.h"
 #include "Core/HW/GCMemcard/GCMemcardDirectory.h"
 #include "Core/HW/GCMemcard/GCMemcardRaw.h"
 #include "Core/HW/Sram.h"
@@ -54,10 +57,13 @@
 #include "Core/IOS/Uids.h"
 #include "Core/NetPlayClient.h"  //for NetPlayUI
 #include "Core/SyncIdentifier.h"
+
 #include "DiscIO/Enums.h"
+
 #include "InputCommon/ControllerEmu/ControlGroup/Attachments.h"
 #include "InputCommon/GCPadStatus.h"
 #include "InputCommon/InputConfig.h"
+
 #include "UICommon/GameFile.h"
 
 #if !defined(_WIN32)
@@ -943,12 +949,10 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
   }
   break;
 
-  case NP_MSG_IPL_STATUS:
+  case NP_MSG_CLIENT_CAPABILITIES:
   {
-    bool status;
-    packet >> status;
-
-    m_players[player.pid].has_ipl_dump = status;
+    packet >> m_players[player.pid].has_ipl_dump;
+    packet >> m_players[player.pid].has_hardware_fma;
   }
   break;
 
@@ -1287,7 +1291,7 @@ bool NetPlayServer::SetupNetSettings()
   settings.m_MMU = Config::Get(Config::MAIN_MMU);
   settings.m_Fastmem = Config::Get(Config::MAIN_FASTMEM);
   settings.m_SkipIPL = Config::Get(Config::MAIN_SKIP_IPL) || !DoAllPlayersHaveIPLDump();
-  settings.m_LoadIPLDump = Config::Get(Config::MAIN_LOAD_IPL_DUMP) && DoAllPlayersHaveIPLDump();
+  settings.m_LoadIPLDump = Config::Get(Config::SESSION_LOAD_IPL_DUMP) && DoAllPlayersHaveIPLDump();
   settings.m_VertexRounding = Config::Get(Config::GFX_HACK_VERTEX_ROUDING);
   settings.m_InternalResolution = Config::Get(Config::GFX_EFB_SCALE);
   settings.m_EFBScaledCopy = Config::Get(Config::GFX_HACK_COPY_EFB_SCALED);
@@ -1306,12 +1310,14 @@ bool NetPlayServer::SetupNetSettings()
   settings.m_DeferEFBCopies = Config::Get(Config::GFX_HACK_DEFER_EFB_COPIES);
   settings.m_EFBAccessTileSize = Config::Get(Config::GFX_HACK_EFB_ACCESS_TILE_SIZE);
   settings.m_EFBAccessDeferInvalidation = Config::Get(Config::GFX_HACK_EFB_DEFER_INVALIDATION);
+
   settings.m_StrictSettingsSync = Config::Get(Config::NETPLAY_STRICT_SETTINGS_SYNC);
   settings.m_SyncSaveData = Config::Get(Config::NETPLAY_SYNC_SAVES);
   settings.m_SyncCodes = Config::Get(Config::NETPLAY_SYNC_CODES);
   settings.m_SyncAllWiiSaves =
       Config::Get(Config::NETPLAY_SYNC_ALL_WII_SAVES) && Config::Get(Config::NETPLAY_SYNC_SAVES);
   settings.m_GolfMode = Config::Get(Config::NETPLAY_NETWORK_MODE) == "golf";
+  settings.m_UseFMA = DoAllPlayersHaveHardwareFMA();
 
   // Unload GameINI to restore things to normal
   Config::RemoveLayer(Config::LayerType::GlobalGame);
@@ -1326,6 +1332,12 @@ bool NetPlayServer::DoAllPlayersHaveIPLDump() const
 {
   return std::all_of(m_players.begin(), m_players.end(),
                      [](const auto& p) { return p.second.has_ipl_dump; });
+}
+
+bool NetPlayServer::DoAllPlayersHaveHardwareFMA() const
+{
+  return std::all_of(m_players.begin(), m_players.end(),
+                     [](const auto& p) { return p.second.has_hardware_fma; });
 }
 
 // called from ---GUI--- thread
@@ -1490,6 +1502,7 @@ bool NetPlayServer::StartGame()
   }
 
   spac << m_settings.m_GolfMode;
+  spac << m_settings.m_UseFMA;
 
   SendAsyncToClients(std::move(spac));
 
@@ -1572,17 +1585,21 @@ bool NetPlayServer::SyncSaveData()
 
       MemoryCard::CheckPath(path, region, is_slot_a);
 
-      bool mc251;
+      int size_override;
       IniFile gameIni = SConfig::LoadGameIni(game->GetGameID(), game->GetRevision());
-      gameIni.GetOrCreateSection("Core")->Get("MemoryCard251", &mc251, false);
+      gameIni.GetOrCreateSection("Core")->Get("MemoryCardSize", &size_override, -1);
 
-      if (mc251)
-        path.insert(path.find_last_of('.'), ".251");
+      if (size_override >= 0 && size_override <= 4)
+      {
+        path.insert(path.find_last_of('.'),
+                    fmt::format(".{}", Memcard::MbitToFreeBlocks(Memcard::MBIT_SIZE_MEMORY_CARD_59
+                                                                 << size_override)));
+      }
 
       sf::Packet pac;
       pac << static_cast<MessageId>(NP_MSG_SYNC_SAVE_DATA);
       pac << static_cast<MessageId>(SYNC_SAVE_DATA_RAW);
-      pac << is_slot_a << region << mc251;
+      pac << is_slot_a << region << size_override;
 
       if (File::Exists(path))
       {

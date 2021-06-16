@@ -111,7 +111,7 @@ static u32 s_sample_counter = 0;
 static u32 s_interrupt_timing = 0;
 
 static u64 s_last_cpu_time = 0;
-static u64 s_cpu_cycles_per_sample = 0xFFFFFFFFFFFULL;
+static u64 s_cpu_cycles_per_sample = 0;
 
 static u32 s_ais_sample_rate = 48000;
 static u32 s_aid_sample_rate = 32000;
@@ -142,15 +142,16 @@ void Init()
 {
   s_control.hex = 0;
   s_control.AISFR = AIS_48KHz;
+  s_control.AIDFR = AID_32KHz;
   s_volume.hex = 0;
   s_sample_counter = 0;
   s_interrupt_timing = 0;
 
   s_last_cpu_time = 0;
-  s_cpu_cycles_per_sample = 0xFFFFFFFFFFFULL;
 
   s_ais_sample_rate = Get48KHzSampleRate();
   s_aid_sample_rate = Get32KHzSampleRate();
+  s_cpu_cycles_per_sample = SystemTimers::GetTicksPerSecond() / s_ais_sample_rate;
 
   event_type_ai = CoreTiming::RegisterEvent("AICallback", Update);
 
@@ -344,4 +345,4 @@ int GetAIPeriod()
   return static_cast<int>(std::min(period, s_period));
 }
 
-}  // end of namespace AudioInterface
+}  // namespace AudioInterface
