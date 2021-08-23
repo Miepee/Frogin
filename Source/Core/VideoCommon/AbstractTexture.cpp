@@ -59,7 +59,6 @@ void AbstractTexture::StretchCustomAndSave(const std::string& filename, unsigned
   u32 level_width = std::max(1u, m_config.width >> level);
   u32 level_height = std::max(1u, m_config.height >> level);
 
-  // Figure out a way to do this only when the config is checked.
   Common::ResizeCustomTextureAndSaveItToLoadPath(filename, level_width, level_height);
 }
 

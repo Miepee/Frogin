@@ -1353,7 +1353,12 @@ void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
     entry->texture->Save(filename, level);
 
   if (g_ActiveConfig.bResizeTextureForDumps && !doesCustomFileExist)
+  {
     entry->texture->StretchCustomAndSave(filename, level);
+    //reload the config, so new custom image shows up without user having to do it manually
+    Config::SetBaseOrCurrent(Config::GFX_HIRES_TEXTURES, false);
+    //Config::SetBaseOrCurrent(Config::GFX_HIRES_TEXTURES, true);
+  }
 }
 
 static void SetSamplerState(u32 index, float custom_tex_scale, bool custom_tex,
