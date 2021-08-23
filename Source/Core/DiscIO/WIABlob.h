@@ -1,6 +1,5 @@
 // Copyright 2018 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -70,7 +69,7 @@ private:
   using SHA1 = std::array<u8, 20>;
   using WiiKey = std::array<u8, 16>;
 
-  // See docs/WIA.md for details about the format
+  // See docs/WiaAndRvz.md for details about the format
 
 #pragma pack(push, 1)
   struct WIAHeader1
@@ -256,11 +255,12 @@ private:
       return std::tie(partition_key, data_size, encrypted, value) >
              std::tie(other.partition_key, other.data_size, other.encrypted, other.value);
     }
+
     bool operator!=(const ReuseID& other) const { return !operator==(other); }
     bool operator>=(const ReuseID& other) const { return !operator<(other); }
     bool operator<=(const ReuseID& other) const { return !operator>(other); }
 
-    const WiiKey* partition_key;
+    WiiKey partition_key;
     u64 data_size;
     bool encrypted;
     u8 value;

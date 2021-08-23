@@ -1,6 +1,5 @@
 // Copyright 2016 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/ConfigLoaders/NetPlayConfigLoader.h"
 
@@ -32,6 +31,7 @@ public:
   {
     layer->Set(Config::MAIN_CPU_THREAD, m_settings.m_CPUthread);
     layer->Set(Config::MAIN_CPU_CORE, m_settings.m_CPUcore);
+    layer->Set(Config::MAIN_ENABLE_CHEATS, m_settings.m_EnableCheats);
     layer->Set(Config::MAIN_GC_LANGUAGE, m_settings.m_SelectedLanguage);
     layer->Set(Config::MAIN_OVERRIDE_REGION_SETTINGS, m_settings.m_OverrideRegionSettings);
     layer->Set(Config::MAIN_DSP_HLE, m_settings.m_DSPHLE);
@@ -40,7 +40,7 @@ public:
     layer->Set(Config::MAIN_SLOT_A, static_cast<int>(m_settings.m_EXIDevice[0]));
     layer->Set(Config::MAIN_SLOT_B, static_cast<int>(m_settings.m_EXIDevice[1]));
     layer->Set(Config::MAIN_SERIAL_PORT_1, static_cast<int>(m_settings.m_EXIDevice[2]));
-    layer->Set(Config::SESSION_WII_SD_CARD_WRITABLE, m_settings.m_WriteToMemcard);
+    layer->Set(Config::SESSION_SAVE_DATA_WRITABLE, m_settings.m_WriteToMemcard);
     layer->Set(Config::MAIN_RAM_OVERRIDE_ENABLE, m_settings.m_RAMOverrideEnable);
     layer->Set(Config::MAIN_MEM1_SIZE, m_settings.m_Mem1Size);
     layer->Set(Config::MAIN_MEM2_SIZE, m_settings.m_Mem2Size);
@@ -132,6 +132,11 @@ public:
       }
 
       layer->Set(Config::SESSION_GCI_FOLDER_CURRENT_GAME_ONLY, true);
+    }
+
+    for (size_t i = 0; i < m_settings.m_GBARomPaths.size(); ++i)
+    {
+      layer->Set(Config::MAIN_GBA_ROM_PATHS[i], m_settings.m_GBARomPaths[i]);
     }
 
     // Check To Override Client's Cheat Codes

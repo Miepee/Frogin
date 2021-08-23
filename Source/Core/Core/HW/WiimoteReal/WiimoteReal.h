@@ -1,6 +1,5 @@
-﻿// Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// Copyright 2008 Dolphin Emulator Project
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -155,6 +154,8 @@ public:
   virtual void FindWiimotes(std::vector<Wiimote*>&, Wiimote*&) = 0;
   // function called when not looking for more Wiimotes
   virtual void Update() = 0;
+  // requests the backend to stop scanning if FindWiimotes is blocking
+  virtual void RequestStopSearching() = 0;
 };
 
 enum class WiimoteScanMode

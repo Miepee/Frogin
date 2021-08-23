@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "VideoCommon/Fifo.h"
 
@@ -297,10 +296,10 @@ void RunGpuLoop()
   AsyncRequests::GetInstance()->SetEnable(true);
   AsyncRequests::GetInstance()->SetPassthrough(false);
 
-  s_gpu_mainloop.Run(
-      [] {
-        const SConfig& param = SConfig::GetInstance();
+  const SConfig& param = SConfig::GetInstance();
 
+  s_gpu_mainloop.Run(
+      [&param] {
         // Run events from the CPU thread.
         AsyncRequests::GetInstance()->PullEvents();
 
@@ -374,7 +373,7 @@ void RunGpuLoop()
 
             // This call is pretty important in DualCore mode and must be called in the FIFO Loop.
             // If we don't, s_swapRequested or s_efbAccessRequested won't be set to false
-            // leading the CPU thread to wait in Video_BeginField or Video_AccessEFB thus slowing
+            // leading the CPU thread to wait in Video_OutputXFB or Video_AccessEFB thus slowing
             // things down.
             AsyncRequests::GetInstance()->PullEvents();
           }

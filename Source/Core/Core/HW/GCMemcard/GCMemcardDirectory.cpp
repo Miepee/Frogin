@@ -1,6 +1,5 @@
 // Copyright 2014 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/HW/GCMemcard/GCMemcardDirectory.h"
 
@@ -237,7 +236,7 @@ GCMemcardDirectory::GCMemcardDirectory(const std::string& directory, int slot,
 
 void GCMemcardDirectory::FlushThread()
 {
-  if (!SConfig::GetInstance().bEnableMemcardSdWriting)
+  if (!Config::Get(Config::SESSION_SAVE_DATA_WRITABLE))
   {
     return;
   }

@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -299,9 +298,4 @@ private:
   UGeckoInstruction m_prev_inst{};
 
   static bool m_end_block;
-
-  // TODO: These should really be in the save state, although it's unlikely to matter much.
-  // They are for lwarx and its friend stwcxd.
-  static bool m_reserve;
-  static u32 m_reserve_address;
 };

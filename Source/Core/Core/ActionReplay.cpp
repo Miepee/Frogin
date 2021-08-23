@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 // -----------------------------------------------------------------------------------------
 // Partial Action Replay code system implementation.
@@ -33,13 +32,14 @@
 
 #include "Common/BitUtils.h"
 #include "Common/CommonTypes.h"
+#include "Common/Config/Config.h"
 #include "Common/IniFile.h"
 #include "Common/Logging/Log.h"
 #include "Common/MsgHandler.h"
 
 #include "Core/ARDecrypt.h"
 #include "Core/CheatCodes.h"
-#include "Core/ConfigManager.h"
+#include "Core/Config/MainSettings.h"
 #include "Core/PowerPC/MMU.h"
 
 namespace ActionReplay
@@ -113,7 +113,7 @@ struct ARAddr
 // AR Remote Functions
 void ApplyCodes(const std::vector<ARCode>& codes)
 {
-  if (!SConfig::GetInstance().bEnableCheats)
+  if (!Config::Get(Config::MAIN_ENABLE_CHEATS))
     return;
 
   std::lock_guard guard(s_lock);
@@ -142,7 +142,7 @@ void UpdateSyncedCodes(const std::vector<ARCode>& codes)
 
 std::vector<ARCode> ApplyAndReturnCodes(const std::vector<ARCode>& codes)
 {
-  if (SConfig::GetInstance().bEnableCheats)
+  if (Config::Get(Config::MAIN_ENABLE_CHEATS))
   {
     std::lock_guard guard(s_lock);
     s_disable_logging = false;
@@ -157,7 +157,7 @@ std::vector<ARCode> ApplyAndReturnCodes(const std::vector<ARCode>& codes)
 
 void AddCode(ARCode code)
 {
-  if (!SConfig::GetInstance().bEnableCheats)
+  if (!Config::Get(Config::MAIN_ENABLE_CHEATS))
     return;
 
   if (code.enabled)
@@ -973,7 +973,7 @@ static bool RunCodeLocked(const ARCode& arcode)
 
 void RunAllActive()
 {
-  if (!SConfig::GetInstance().bEnableCheats)
+  if (!Config::Get(Config::MAIN_ENABLE_CHEATS))
     return;
 
   // If the mutex is idle then acquiring it should be cheap, fast mutexes

@@ -1,6 +1,5 @@
 // Copyright 2019 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Common/Logging/Log.h"
 
@@ -320,6 +319,9 @@ void Renderer::SetComputeImageTexture(AbstractTexture* texture, bool read, bool 
     return;
 
   m_state.compute_image_texture = dxtex;
+  if (dxtex)
+    dxtex->TransitionToState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
   m_dirty_bits |= DirtyState_ComputeImageTexture;
 }
 

@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "VideoCommon/VertexShaderGen.h"
 
@@ -332,6 +331,13 @@ ShaderCode GenerateVertexShaderCode(APIType api_type, const ShaderHostConfig& ho
 
     if (texinfo.inputform == TexInputForm::AB11)
       out.Write("coord.z = 1.0;\n");
+
+    // Convert NaNs to 1 - needed to fix eyelids in Shadow the Hedgehog during cutscenes
+    // See https://bugs.dolphin-emu.org/issues/11458
+    out.Write("// Convert NaN to 1\n");
+    out.Write("if (isnan(coord.x)) coord.x = 1.0;\n");
+    out.Write("if (isnan(coord.y)) coord.y = 1.0;\n");
+    out.Write("if (isnan(coord.z)) coord.z = 1.0;\n");
 
     // first transformation
     switch (texinfo.texgentype)

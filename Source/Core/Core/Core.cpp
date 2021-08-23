@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/Core.h"
 
@@ -49,6 +48,7 @@
 #include "Core/HW/CPU.h"
 #include "Core/HW/DSP.h"
 #include "Core/HW/EXI/EXI.h"
+#include "Core/HW/GBAPad.h"
 #include "Core/HW/GCKeyboard.h"
 #include "Core/HW/GCPad.h"
 #include "Core/HW/HW.h"
@@ -461,6 +461,7 @@ static void EmuThread(std::unique_ptr<BootParameters> boot, WindowSystemInfo wsi
   {
     g_controller_interface.Initialize(wsi);
     Pad::Initialize();
+    Pad::InitializeGBA();
     Keyboard::Initialize();
     init_controllers = true;
   }
@@ -468,6 +469,7 @@ static void EmuThread(std::unique_ptr<BootParameters> boot, WindowSystemInfo wsi
   {
     g_controller_interface.ChangeWindow(wsi.render_window);
     Pad::LoadConfig();
+    Pad::LoadGBAConfig();
     Keyboard::LoadConfig();
   }
 
@@ -518,6 +520,7 @@ static void EmuThread(std::unique_ptr<BootParameters> boot, WindowSystemInfo wsi
 
     Keyboard::Shutdown();
     Pad::Shutdown();
+    Pad::ShutdownGBA();
     g_controller_interface.Shutdown();
   }};
 

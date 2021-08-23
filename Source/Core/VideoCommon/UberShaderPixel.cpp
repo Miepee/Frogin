@@ -1,6 +1,5 @@
 // Copyright 2015 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "VideoCommon/UberShaderPixel.h"
 
@@ -35,7 +34,7 @@ PixelShaderUid GetPixelShaderUid()
   return out;
 }
 
-void ClearUnusedPixelShaderUidBits(APIType ApiType, const ShaderHostConfig& host_config,
+void ClearUnusedPixelShaderUidBits(APIType api_type, const ShaderHostConfig& host_config,
                                    PixelShaderUid* uid)
 {
   pixel_ubershader_uid_data* const uid_data = uid->GetUidData();
@@ -43,11 +42,11 @@ void ClearUnusedPixelShaderUidBits(APIType ApiType, const ShaderHostConfig& host
   // OpenGL and Vulkan convert implicitly normalized color outputs to their uint representation.
   // Therefore, it is not necessary to use a uint output on these backends. We also disable the
   // uint output when logic op is not supported (i.e. driver/device does not support D3D11.1).
-  if (ApiType != APIType::D3D || !host_config.backend_logic_op)
+  if (api_type != APIType::D3D || !host_config.backend_logic_op)
     uid_data->uint_output = 0;
 }
 
-ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
+ShaderCode GenPixelShader(APIType api_type, const ShaderHostConfig& host_config,
                           const pixel_ubershader_uid_data* uid_data)
 {
   const bool per_pixel_lighting = host_config.per_pixel_lighting;
@@ -64,13 +63,13 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
 
   out.Write("// Pixel UberShader for {} texgens{}{}\n", numTexgen,
             early_depth ? ", early-depth" : "", per_pixel_depth ? ", per-pixel depth" : "");
-  WritePixelShaderCommonHeader(out, ApiType, host_config, bounding_box);
-  WriteUberShaderCommonHeader(out, ApiType, host_config);
+  WritePixelShaderCommonHeader(out, api_type, host_config, bounding_box);
+  WriteUberShaderCommonHeader(out, api_type, host_config);
   if (per_pixel_lighting)
     WriteLightingFunction(out);
 
   // Shader inputs/outputs in GLSL (HLSL is in main).
-  if (ApiType == APIType::OpenGL || ApiType == APIType::Vulkan)
+  if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
   {
     if (use_dual_source)
     {
@@ -111,7 +110,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
     if (host_config.backend_geometry_shaders)
     {
       out.Write("VARYING_LOCATION(0) in VertexData {{\n");
-      GenerateVSOutputMembers(out, ApiType, numTexgen, host_config,
+      GenerateVSOutputMembers(out, api_type, numTexgen, host_config,
                               GetInterpolationQualifier(msaa, ssaa, true, true));
 
       if (stereo)
@@ -159,7 +158,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
       out.Write(", int2 fixpoint_uv{}", i);
     out.Write(") {{\n");
 
-    if (ApiType == APIType::D3D)
+    if (api_type == APIType::D3D)
     {
       out.Write("  switch (index) {{\n");
       for (u32 i = 0; i < numTexgen; i++)
@@ -228,9 +227,9 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
     // Doesn't look like DirectX supports this. Oh well the code path is here just in case it
     // supports this in the future.
     out.Write("int4 sampleTexture(uint sampler_num, float3 uv) {{\n");
-    if (ApiType == APIType::OpenGL || ApiType == APIType::Vulkan)
+    if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
       out.Write("  return iround(texture(samp[sampler_num], uv) * 255.0);\n");
-    else if (ApiType == APIType::D3D)
+    else if (api_type == APIType::D3D)
       out.Write("  return iround(Tex[sampler_num].Sample(samp[sampler_num], uv) * 255.0);\n");
     out.Write("}}\n\n");
   }
@@ -244,9 +243,9 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "  switch(sampler_num) {{\n");
     for (int i = 0; i < 8; i++)
     {
-      if (ApiType == APIType::OpenGL || ApiType == APIType::Vulkan)
+      if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
         out.Write("  case {}u: return iround(texture(samp[{}], uv) * 255.0);\n", i, i);
-      else if (ApiType == APIType::D3D)
+      else if (api_type == APIType::D3D)
         out.Write("  case {}u: return iround(Tex[{}].Sample(samp[{}], uv) * 255.0);\n", i, i, i);
     }
     out.Write("  }}\n"
@@ -405,7 +404,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
   // The switch statements in these functions appear to get transformed into an if..else chain
   // on NVIDIA's OpenGL/Vulkan drivers, resulting in lower performance than the D3D counterparts.
   // Transforming the switch into a binary tree of ifs can increase performance by up to 20%.
-  if (ApiType == APIType::D3D)
+  if (api_type == APIType::D3D)
   {
     out.Write("// Helper function for Alpha Test\n"
               "bool alphaCompare(int a, int b, uint compare) {{\n"
@@ -670,7 +669,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
     out.Write(")\n\n");
   }
 
-  if (ApiType == APIType::OpenGL || ApiType == APIType::Vulkan)
+  if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
   {
     if (early_depth && host_config.backend_early_z)
       out.Write("FORCE_EARLY_Z;\n");
@@ -746,7 +745,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "  float4 lit_colors_1 = colors_1;\n"
               "  float3 lit_normal = normalize(Normal.xyz);\n"
               "  float3 lit_pos = WorldPos.xyz;\n");
-    WriteVertexLighting(out, ApiType, "lit_pos", "lit_normal", "colors_0", "colors_1",
+    WriteVertexLighting(out, api_type, "lit_pos", "lit_normal", "colors_0", "colors_1",
                         "lit_colors_0", "lit_colors_1");
     color_input_prefix = "lit_";
   }
@@ -755,7 +754,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
             BitfieldExtract<&GenMode::numtevstages>("bpmem_genmode"));
 
   out.Write("  // Main tev loop\n");
-  if (ApiType == APIType::D3D)
+  if (api_type == APIType::D3D)
   {
     // Tell DirectX we don't want this loop unrolled (it crashes if it tries to)
     out.Write("  [loop]\n");
@@ -829,24 +828,24 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "          break;\n"
               "        case {:s}:\n",
               IndTexFormat::ITF_5);
-    out.Write("          indcoord.x = (indcoord.x & 0x1f) + ((bias & 1u) != 0u ? 1 : 0);\n"
-              "          indcoord.y = (indcoord.y & 0x1f) + ((bias & 2u) != 0u ? 1 : 0);\n"
-              "          indcoord.z = (indcoord.z & 0x1f) + ((bias & 4u) != 0u ? 1 : 0);\n"
-              "          s.AlphaBump = s.AlphaBump & 0xe0;\n"
+    out.Write("          indcoord.x = (indcoord.x >> 3) + ((bias & 1u) != 0u ? 1 : 0);\n"
+              "          indcoord.y = (indcoord.y >> 3) + ((bias & 2u) != 0u ? 1 : 0);\n"
+              "          indcoord.z = (indcoord.z >> 3) + ((bias & 4u) != 0u ? 1 : 0);\n"
+              "          s.AlphaBump = s.AlphaBump << 5;\n"
               "          break;\n"
               "        case {:s}:\n",
               IndTexFormat::ITF_4);
-    out.Write("          indcoord.x = (indcoord.x & 0x0f) + ((bias & 1u) != 0u ? 1 : 0);\n"
-              "          indcoord.y = (indcoord.y & 0x0f) + ((bias & 2u) != 0u ? 1 : 0);\n"
-              "          indcoord.z = (indcoord.z & 0x0f) + ((bias & 4u) != 0u ? 1 : 0);\n"
-              "          s.AlphaBump = s.AlphaBump & 0xf0;\n"
+    out.Write("          indcoord.x = (indcoord.x >> 4) + ((bias & 1u) != 0u ? 1 : 0);\n"
+              "          indcoord.y = (indcoord.y >> 4) + ((bias & 2u) != 0u ? 1 : 0);\n"
+              "          indcoord.z = (indcoord.z >> 4) + ((bias & 4u) != 0u ? 1 : 0);\n"
+              "          s.AlphaBump = s.AlphaBump << 4;\n"
               "          break;\n"
               "        case {:s}:\n",
               IndTexFormat::ITF_3);
-    out.Write("          indcoord.x = (indcoord.x & 0x07) + ((bias & 1u) != 0u ? 1 : 0);\n"
-              "          indcoord.y = (indcoord.y & 0x07) + ((bias & 2u) != 0u ? 1 : 0);\n"
-              "          indcoord.z = (indcoord.z & 0x07) + ((bias & 4u) != 0u ? 1 : 0);\n"
-              "          s.AlphaBump = s.AlphaBump & 0xf8;\n"
+    out.Write("          indcoord.x = (indcoord.x >> 5) + ((bias & 1u) != 0u ? 1 : 0);\n"
+              "          indcoord.y = (indcoord.y >> 5) + ((bias & 2u) != 0u ? 1 : 0);\n"
+              "          indcoord.z = (indcoord.z >> 5) + ((bias & 4u) != 0u ? 1 : 0);\n"
+              "          s.AlphaBump = s.AlphaBump << 3;\n"
               "          break;\n"
               "        }}\n"
               "\n"
@@ -893,7 +892,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "      // Emulate s24 overflows\n"
               "      tevcoord.xy = (tevcoord.xy << 8) >> 8;\n"
               "    }}\n"
-              "    else if (texture_enabled)\n"
+              "    else\n"
               "    {{\n"
               "      tevcoord.xy = fixedPoint_uv;\n"
               "    }}\n"
@@ -1093,7 +1092,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
               "  if ((bpmem_genmode & {}u) != 0u) {{\n",
               1 << GenMode().zfreeze.StartBit());
     out.Write("    float2 screenpos = rawpos.xy * " I_EFBSCALE ".xy;\n");
-    if (ApiType == APIType::OpenGL)
+    if (api_type == APIType::OpenGL)
     {
       out.Write("    // OpenGL has reversed vertical screenspace coordinates\n"
                 "    screenpos.y = 528.0 - screenpos.y;\n");
@@ -1234,7 +1233,7 @@ ShaderCode GenPixelShader(APIType ApiType, const ShaderHostConfig& host_config,
             "\n");
 
   // D3D requires that the shader outputs be uint when writing to a uint render target for logic op.
-  if (ApiType == APIType::D3D && uid_data->uint_output)
+  if (api_type == APIType::D3D && uid_data->uint_output)
   {
     out.Write("  if (bpmem_rgba6_format)\n"
               "    ocol0 = uint4(TevResult & 0xFC);\n"

@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -30,6 +29,9 @@ void Shutdown();
 void DoState(PointerWrap& p);
 
 void RegisterMMIO(MMIO::Mapping* mmio, u32 base);
+
+void ScheduleEvent(int device_number, s64 cycles_into_future, u64 userdata = 0);
+void RemoveEvent(int device_number);
 
 void UpdateDevices();
 

@@ -1,6 +1,5 @@
 // Copyright 2015 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "DolphinQt/Host.h"
 
@@ -25,6 +24,9 @@
 #include "Core/PowerPC/PowerPC.h"
 #include "Core/State.h"
 
+#ifdef HAS_LIBMGBA
+#include "DolphinQt/GBAWidget.h"
+#endif
 #include "DolphinQt/QtUtils/QueueOnObject.h"
 #include "DolphinQt/Settings.h"
 
@@ -116,6 +118,15 @@ void Host::SetRenderFullFocus(bool focus)
   m_render_full_focus = focus;
 }
 
+bool Host::GetGBAFocus()
+{
+#ifdef HAS_LIBMGBA
+  return qobject_cast<GBAWidget*>(QApplication::activeWindow()) != nullptr;
+#else
+  return false;
+#endif
+}
+
 bool Host::GetRenderFullscreen()
 {
   return m_render_fullscreen;
@@ -168,7 +179,7 @@ void Host_UpdateTitle(const std::string& title)
 
 bool Host_RendererHasFocus()
 {
-  return Host::GetInstance()->GetRenderFocus();
+  return Host::GetInstance()->GetRenderFocus() || Host::GetInstance()->GetGBAFocus();
 }
 
 bool Host_RendererHasFullFocus()
@@ -230,3 +241,10 @@ void Host_TitleChanged()
     Discord::UpdateDiscordPresence();
 #endif
 }
+
+#ifndef HAS_LIBMGBA
+std::unique_ptr<GBAHostInterface> Host_CreateGBAHost(std::weak_ptr<HW::GBA::Core> core)
+{
+  return nullptr;
+}
+#endif

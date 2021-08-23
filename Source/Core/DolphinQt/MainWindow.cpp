@@ -1,6 +1,5 @@
 // Copyright 2015 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -43,6 +42,7 @@
 #include "Core/Core.h"
 #include "Core/FreeLookManager.h"
 #include "Core/HW/DVD/DVDInterface.h"
+#include "Core/HW/GBAPad.h"
 #include "Core/HW/GCKeyboard.h"
 #include "Core/HW/GCPad.h"
 #include "Core/HW/ProcessorInterface.h"
@@ -307,6 +307,7 @@ void MainWindow::InitControllers()
 
   g_controller_interface.Initialize(GetWindowSystemInfo(windowHandle()));
   Pad::Initialize();
+  Pad::InitializeGBA();
   Keyboard::Initialize();
   Wiimote::Initialize(Wiimote::InitializeMode::DO_NOT_WAIT_FOR_WIIMOTES);
   FreeLook::Initialize();
@@ -321,6 +322,9 @@ void MainWindow::InitControllers()
   Pad::LoadConfig();
   Pad::GetConfig()->SaveConfig();
 
+  Pad::LoadGBAConfig();
+  Pad::GetGBAConfig()->SaveConfig();
+
   Keyboard::LoadConfig();
   Keyboard::GetConfig()->SaveConfig();
 
@@ -333,6 +337,7 @@ void MainWindow::ShutdownControllers()
   m_hotkey_scheduler->Stop();
 
   Pad::Shutdown();
+  Pad::ShutdownGBA();
   Keyboard::Shutdown();
   Wiimote::Shutdown();
   HotkeyManagerEmu::Shutdown();
@@ -1686,18 +1691,21 @@ void MainWindow::OnStartRecording()
     emit ReadOnlyModeChanged(true);
   }
 
-  int controllers = 0;
+  Movie::ControllerTypeArray controllers{};
+  Movie::WiimoteEnabledArray wiimotes{};
 
   for (int i = 0; i < 4; i++)
   {
-    if (SerialInterface::SIDevice_IsGCController(SConfig::GetInstance().m_SIDevice[i]))
-      controllers |= (1 << i);
-
-    if (WiimoteCommon::GetSource(i) != WiimoteSource::None)
-      controllers |= (1 << (i + 4));
+    if (SConfig::GetInstance().m_SIDevice[i] == SerialInterface::SIDEVICE_GC_GBA_EMULATED)
+      controllers[i] = Movie::ControllerType::GBA;
+    else if (SerialInterface::SIDevice_IsGCController(SConfig::GetInstance().m_SIDevice[i]))
+      controllers[i] = Movie::ControllerType::GC;
+    else
+      controllers[i] = Movie::ControllerType::None;
+    wiimotes[i] = WiimoteCommon::GetSource(i) != WiimoteSource::None;
   }
 
-  if (Movie::BeginRecordingInput(controllers))
+  if (Movie::BeginRecordingInput(controllers, wiimotes))
   {
     emit RecordingStatusChanged(true);
 

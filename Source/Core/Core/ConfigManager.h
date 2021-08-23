@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
@@ -119,8 +118,6 @@ struct SConfig
   bool bDSPHLE = true;
   bool bSyncGPUOnSkipIdleHack = true;
   bool bHLE_BS2 = true;
-  bool bEnableCheats = false;
-  bool bEnableMemcardSdWriting = true;
   bool bCopyWiiSaveNetplay = true;
 
   bool bDPL2Decoder = false;

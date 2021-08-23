@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "VideoCommon/PixelShaderGen.h"
 
@@ -372,16 +371,6 @@ void WritePixelShaderCommonHeader(ShaderCode& out, APIType api_type,
             "int3 iround(float3 x) {{ return int3(round(x)); }}\n"
             "int4 iround(float4 x) {{ return int4(round(x)); }}\n\n");
 
-  // GLSL's any() and all() only accept vector types, while HLSL's also accept scalar types. We're
-  // adding these for convenience because while vector comparisons return a bool scalar in GLSL,
-  // allowing the results to be used directly in an if statement, they return a bool vector in HLSL,
-  // necessitating the use of any() or all() to reduce it to a scalar.
-  if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
-  {
-    out.Write("bool any(bool b) {{ return b; }}\n"
-              "bool all(bool b) {{ return b; }}\n\n");
-  }
-
   if (api_type == APIType::OpenGL || api_type == APIType::Vulkan)
   {
     out.Write("SAMPLER_BINDING(0) uniform sampler2DArray samp[8];\n");
@@ -504,9 +493,12 @@ void UpdateBoundingBox(float2 rawpos) {{
   // avoiding EFB copy buffer overflow in affected games.
   //
   // For a more detailed explanation, see https://dolp.in/pr9801
-  int2 int_efb_scale = iround(1 / {efb_scale}.xy);
-  if (any(int2(rawpos) % int_efb_scale != int_efb_scale >> 1))  // divide by two
+  int2 int_efb_scale = iround(1.0 / {efb_scale}.xy);
+  if (int(rawpos.x) % int_efb_scale.x != int_efb_scale.x >> 1 ||
+      int(rawpos.y) % int_efb_scale.y != int_efb_scale.y >> 1)  // right shift for fast divide by two
+  {{
     return;
+  }}
 
   // The rightmost shaded pixel is not included in the right bounding box register,
   // such that width = right - left + 1. This has been verified on hardware.
@@ -1007,17 +999,22 @@ static void WriteStage(ShaderCode& out, const pixel_shader_uid_data* uid_data, i
           "z",
       };
 
-      // 0b11111000, 0b11100000, 0b11110000, 0b11111000
-      static constexpr std::array<const char*, 4> tev_ind_alpha_mask{
-          "248",
-          "224",
-          "240",
-          "248",
+      // According to libogc, the bump alpha value is 5 bits, and comes from the bottom bits of the
+      // component byte, except in the case of ITF_8, which presumably uses the top bits with a
+      // mask.
+      // https://github.com/devkitPro/libogc/blob/bd24a9b3f59502f9b30d6bac0ae35fc485045f78/gc/ogc/gx.h#L3038-L3041
+      // https://github.com/devkitPro/libogc/blob/bd24a9b3f59502f9b30d6bac0ae35fc485045f78/gc/ogc/gx.h#L790-L800
+
+      static constexpr std::array<char, 4> tev_ind_alpha_shift{
+          '0',  // ITF_8: 0bXXXXXYYY -> 0bXXXXX000? No shift?
+          '5',  // ITF_5: 0bIIIIIAAA -> 0bAAA00000, shift of 5
+          '4',  // ITF_4: 0bIIIIAAAA -> 0bAAAA0000, shift of 4
+          '3',  // ITF_3: 0bIIIAAAAA -> 0bAAAAA000, shift of 3
       };
 
-      out.Write("alphabump = iindtex{}.{} & {};\n", tevind.bt.Value(),
+      out.Write("\talphabump = (iindtex{}.{} << {}) & 248;\n", tevind.bt.Value(),
                 tev_ind_alpha_sel[u32(tevind.bs.Value())],
-                tev_ind_alpha_mask[u32(tevind.fmt.Value())]);
+                tev_ind_alpha_shift[u32(tevind.fmt.Value())]);
     }
     else
     {
@@ -1027,14 +1024,14 @@ static void WriteStage(ShaderCode& out, const pixel_shader_uid_data* uid_data, i
     if (has_ind_stage && tevind.matrix_index != IndMtxIndex::Off)
     {
       // format
-      static constexpr std::array<const char*, 4> tev_ind_fmt_mask{
-          "255",
-          "31",
-          "15",
-          "7",
+      static constexpr std::array<char, 4> tev_ind_fmt_shift{
+          '0',  // ITF_8: 0bXXXXXXXX -> 0bXXXXXXXX, no shift
+          '3',  // ITF_5: 0bIIIIIAAA -> 0b000IIIII, shift of 3
+          '4',  // ITF_4: 0bIIIIAAAA -> 0b0000IIII, shift of 4
+          '5',  // ITF_3: 0bIIIAAAAA -> 0b00000III, shift of 5
       };
-      out.Write("\tint3 iindtevcrd{} = iindtex{} & {};\n", n, tevind.bt.Value(),
-                tev_ind_fmt_mask[u32(tevind.fmt.Value())]);
+      out.Write("\tint3 iindtevcrd{} = iindtex{} >> {};\n", n, tevind.bt.Value(),
+                tev_ind_fmt_shift[u32(tevind.fmt.Value())]);
 
       // bias - TODO: Check if this needs to be this complicated...
       // indexed by bias

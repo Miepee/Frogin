@@ -1,9 +1,9 @@
 // Copyright 2017 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
+#include <array>
 #include <string>
 
 #include "Common/Config/Config.h"
@@ -87,6 +87,7 @@ extern const Info<bool> MAIN_AUTO_DISC_CHANGE;
 extern const Info<bool> MAIN_ALLOW_SD_WRITES;
 extern const Info<bool> MAIN_ENABLE_SAVESTATES;
 extern const Info<DiscIO::Region> MAIN_FALLBACK_REGION;
+extern const Info<bool> MAIN_REAL_WII_REMOTE_REPEAT_REPORTS;
 
 // Main.DSP
 
@@ -118,6 +119,14 @@ extern const Info<std::string> MAIN_LOAD_PATH;
 extern const Info<std::string> MAIN_RESOURCEPACK_PATH;
 extern const Info<std::string> MAIN_FS_PATH;
 extern const Info<std::string> MAIN_SD_PATH;
+
+// Main.GBA
+
+extern const Info<std::string> MAIN_GBA_BIOS_PATH;
+extern const std::array<Info<std::string>, 4> MAIN_GBA_ROM_PATHS;
+extern const Info<std::string> MAIN_GBA_SAVES_PATH;
+extern const Info<bool> MAIN_GBA_SAVES_IN_ROM_PATH;
+extern const Info<bool> MAIN_GBA_THREADS;
 
 // Main.Network
 

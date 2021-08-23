@@ -1,6 +1,5 @@
 // Copyright 2015 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "DolphinQt/Settings.h"
 
@@ -416,14 +415,14 @@ void Settings::ResetNetPlayServer(NetPlay::NetPlayServer* server)
 
 bool Settings::GetCheatsEnabled() const
 {
-  return SConfig::GetInstance().bEnableCheats;
+  return Config::Get(Config::MAIN_ENABLE_CHEATS);
 }
 
 void Settings::SetCheatsEnabled(bool enabled)
 {
-  if (SConfig::GetInstance().bEnableCheats != enabled)
+  if (Config::Get(Config::MAIN_ENABLE_CHEATS) != enabled)
   {
-    SConfig::GetInstance().bEnableCheats = enabled;
+    Config::SetBaseOrCurrent(Config::MAIN_ENABLE_CHEATS, enabled);
     emit EnableCheatsChanged(enabled);
   }
 }

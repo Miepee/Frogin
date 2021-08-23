@@ -1,6 +1,5 @@
 // Copyright 2016 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "VideoBackends/Vulkan/ShaderCompiler.h"
 #include "VideoBackends/Vulkan/VulkanContext.h"
@@ -197,7 +196,21 @@ static std::optional<SPIRVCodeVector> CompileShaderToSPV(EShLanguage stage,
 
   SPIRVCodeVector out_code;
   spv::SpvBuildLogger logger;
-  glslang::GlslangToSpv(*intermediate, out_code, &logger);
+  glslang::SpvOptions options;
+
+  if (g_ActiveConfig.bEnableValidationLayer)
+  {
+    // Attach the source code to the SPIR-V for tools like RenderDoc.
+    intermediate->addSourceText(pass_source_code, pass_source_code_length);
+
+    options.generateDebugInfo = true;
+    options.disableOptimizer = true;
+    options.optimizeSize = false;
+    options.disassemble = false;
+    options.validate = true;
+  }
+
+  glslang::GlslangToSpv(*intermediate, out_code, &logger, &options);
 
   // Write out messages
   // Temporary: skip if it contains "Warning, version 450 is not yet complete; most version-specific

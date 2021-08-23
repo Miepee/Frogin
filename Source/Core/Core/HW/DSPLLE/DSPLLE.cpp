@@ -1,6 +1,5 @@
 // Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/HW/DSPLLE/DSPLLE.h"
 
@@ -25,7 +24,6 @@
 #include "Core/DSP/DSPTables.h"
 #include "Core/DSP/Interpreter/DSPInterpreter.h"
 #include "Core/DSP/Jit/DSPEmitterBase.h"
-#include "Core/HW/DSPLLE/DSPLLEGlobals.h"
 #include "Core/HW/Memmap.h"
 #include "Core/Host.h"
 

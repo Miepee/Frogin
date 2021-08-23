@@ -8,9 +8,9 @@ cmake_minimum_required(VERSION 3.10)
 
 # MacOS prior to 10.14 did not support aligned alloc which is used to implement
 # std::unique_ptr in the arm64 C++ standard library. x86_64 builds can override
-# this to 10.12.0 using -DCMAKE_OSX_DEPLOYMENT_TARGET="10.12.0" without issue.
+# this to 10.13.0 using -DCMAKE_OSX_DEPLOYMENT_TARGET="10.13.0" without issue.
 # This is done in the universal binary building script to build a binary that 
-# runs on 10.12 on x86_64 computers, while still containing an arm64 slice.
+# runs on 10.13 on x86_64 computers, while still containing an arm64 slice.
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14.0" CACHE STRING "")
 
@@ -45,6 +45,7 @@ option(ENABLE_LLVM "Enables LLVM support, for disassembly" ON)
 option(ENABLE_TESTS "Enables building the unit tests" ON)
 option(ENABLE_VULKAN "Enables vulkan video backend" ON)
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence, show the current game on Discord" ON)
+option(USE_MGBA "Enables GBA controllers emulation using libmgba" ON)
 
 # Maintainers: if you consider blanket disabling this for your users, please
 # consider the following points:
@@ -824,6 +825,14 @@ if(USE_DISCORD_PRESENCE)
   message(STATUS "Using static DiscordRPC from Externals")
   add_subdirectory(Externals/discord-rpc EXCLUDE_FROM_ALL)
   include_directories(Externals/discord-rpc/include)
+endif()
+
+if(NOT ENABLE_QT)
+  set(USE_MGBA 0)
+endif()
+if(USE_MGBA)
+  message(STATUS "Using static libmgba from Externals")
+  add_subdirectory(Externals/mGBA)
 endif()
 
 find_package(SYSTEMD)

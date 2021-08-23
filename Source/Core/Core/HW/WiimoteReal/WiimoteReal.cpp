@@ -1,6 +1,5 @@
 // Copyright 2010 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/HW/WiimoteReal/WiimoteReal.h"
 
@@ -16,6 +15,7 @@
 #include "Common/IniFile.h"
 #include "Common/Swap.h"
 #include "Common/Thread.h"
+#include "Core/Config/MainSettings.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
 #include "Core/HW/Wiimote.h"
@@ -24,7 +24,6 @@
 #include "Core/HW/WiimoteReal/IOAndroid.h"
 #include "Core/HW/WiimoteReal/IOLinux.h"
 #include "Core/HW/WiimoteReal/IOWin.h"
-#include "Core/HW/WiimoteReal/IOdarwin.h"
 #include "Core/HW/WiimoteReal/IOhidapi.h"
 #include "InputCommon/ControllerInterface/Wiimote/WiimoteController.h"
 #include "InputCommon/InputConfig.h"
@@ -437,12 +436,17 @@ void Wiimote::Update()
 {
   // Wii remotes send input at 200hz once a Wii enables "sniff mode" on the connection.
   // PC bluetooth stacks do not enable sniff mode causing remotes to send input at only 100hz.
+  //
   // Commercial games do not send speaker data unless input rates approach 200hz.
+  // Some games will also present input issues.
+  // e.g. Super Mario Galaxy's star cursor drops in and out.
+  //
   // If we want speaker data we must pretend input is at 200hz.
   // We duplicate data reports to accomplish this.
   // Unfortunately this breaks detection of motion gestures in some games.
   // e.g. Sonic and the Secret Rings, Jett Rocket
-  const bool repeat_reports_to_maintain_200hz = SConfig::GetInstance().m_WiimoteEnableSpeaker;
+  const bool repeat_reports_to_maintain_200hz =
+      Config::Get(Config::MAIN_REAL_WII_REMOTE_REPEAT_REPORTS);
 
   const Report& rpt = ProcessReadQueue(repeat_reports_to_maintain_200hz);
 
@@ -542,9 +546,16 @@ void WiimoteScanner::StartThread()
 
 void WiimoteScanner::StopThread()
 {
-  if (m_scan_thread_running.TestAndClear())
+  if (m_scan_thread_running.IsSet())
   {
     SetScanMode(WiimoteScanMode::DO_NOT_SCAN);
+
+    for (const auto& backend : m_backends)
+    {
+      backend->RequestStopSearching();
+    }
+
+    m_scan_thread_running.Clear();
     m_scan_thread.join();
   }
 }
@@ -641,7 +652,6 @@ void WiimoteScanner::ThreadFunc()
     m_backends.emplace_back(std::make_unique<WiimoteScannerLinux>());
     m_backends.emplace_back(std::make_unique<WiimoteScannerAndroid>());
     m_backends.emplace_back(std::make_unique<WiimoteScannerWindows>());
-    m_backends.emplace_back(std::make_unique<WiimoteScannerDarwin>());
     m_backends.emplace_back(std::make_unique<WiimoteScannerHidapi>());
   }
 
