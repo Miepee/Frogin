@@ -99,9 +99,10 @@ void ResizeCustomTextureAndSaveItToLoadPath(const std::string& path, u32 width, 
   std::string loadPath = path;
   loadPath = loadPath.replace(loadPath.find("Dump"), 4, "Load");
 
-  // some games use this specific texture for what I assume is shader stuff. Since it makes games look really unplayable, I'm ignoring it.
+  // some games use this specific texture for what I assume is shader stuff. Since it makes games look really unplayable, I'm not replacing it.
   if (loadPath.find("tex1_4x4_fbf7fa62c3db559f_6.png") != std::string::npos)
   {
+    std::filesystem::copy(path, loadPath);
     return;
   }
 

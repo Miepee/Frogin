@@ -429,7 +429,6 @@ unsigned const char frogArray[] = {
     0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82};
 unsigned int frogArrayLength = 5884;
 
-
 std::unique_ptr<TextureCacheBase> g_texture_cache;
 
 std::bitset<8> TextureCacheBase::valid_bind_points;
@@ -1309,7 +1308,9 @@ TextureCacheBase::DoPartialTextureUpdates(TCacheEntry* entry_to_update, const u8
   return entry_to_update;
 }
 
-void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, unsigned int level,
+// needed to modify this.
+// returns true if texture has been dumped, returns false if not
+bool TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, unsigned int level,
                                    bool is_arbitrary)
 {
   std::string szDir = File::GetUserPath(D_DUMPTEXTURES_IDX) + SConfig::GetInstance().GetGameID();
@@ -1335,7 +1336,7 @@ void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
   if (level > 0)
   {
     if (!g_ActiveConfig.bDumpMipmapTextures)
-      return;
+      return false;
     basename += fmt::format("_mip{}", level);
   }
 
@@ -1347,18 +1348,15 @@ void TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
 
   // if both the frog copy and the original dump does not exist, we dump it
   if (doesFileExist && doesCustomFileExist)
-    return;
-
+    return false;
+  
   if (!g_ActiveConfig.bDumpBaseTextures && !doesFileExist)
     entry->texture->Save(filename, level);
 
   if (g_ActiveConfig.bResizeTextureForDumps && !doesCustomFileExist)
-  {
     entry->texture->StretchCustomAndSave(filename, level);
-    //reload the config, so new custom image shows up without user having to do it manually
-    Config::SetBaseOrCurrent(Config::GFX_HIRES_TEXTURES, false);
-    //Config::SetBaseOrCurrent(Config::GFX_HIRES_TEXTURES, true);
-  }
+  
+  return true;
 }
 
 static void SetSamplerState(u32 index, float custom_tex_scale, bool custom_tex,
@@ -2051,10 +2049,18 @@ TextureCacheBase::GetTexture(const int textureCacheSafetyColorSampleSize, Textur
 
   if (!hires_tex)
   {
+    bool dumpedTexture = false;
     for (u32 level = 0; level < texLevels; ++level)
     {
-      DumpTexture(entry, basename, level, entry->has_arbitrary_mips);
+      // there has to be a better way for this, right? 
+      if (!dumpedTexture)
+        dumpedTexture = DumpTexture(entry, basename, level, entry->has_arbitrary_mips);
+      else
+        DumpTexture(entry, basename, level, entry->has_arbitrary_mips);
     }
+    // ONLY reload, if we dumped something new
+    if (dumpedTexture && g_ActiveConfig.bHiresTextures)
+      g_renderer->ForceReloadTextures();
   }
 
   INCSTAT(g_stats.num_textures_uploaded);

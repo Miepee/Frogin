@@ -290,7 +290,7 @@ private:
                                        TLUTFormat tlutfmt);
   void StitchXFBCopy(TCacheEntry* entry_to_update);
 
-  void DumpTexture(TCacheEntry* entry, std::string basename, unsigned int level, bool is_arbitrary);
+  bool DumpTexture(TCacheEntry* entry, std::string basename, unsigned int level, bool is_arbitrary);
   void CheckTempSize(size_t required_size);
 
   TCacheEntry* AllocateCacheEntry(const TextureConfig& config);
