@@ -1347,10 +1347,11 @@ bool TextureCacheBase::DumpTexture(TCacheEntry* entry, std::string basename, uns
   bool doesCustomFileExist = File::Exists(frogFilename);
 
   // if both the frog copy and the original dump does not exist, we dump it
-  if (doesFileExist && doesCustomFileExist)
+  // OR if the texture's size is 320x240. Some games decided to just constantly use efb copies as textures and I dont want to dump them
+  if ((doesFileExist && doesCustomFileExist) || basename.find("320x240") != std::string::npos)
     return false;
   
-  if (!g_ActiveConfig.bDumpBaseTextures && !doesFileExist)
+  if (g_ActiveConfig.bDumpBaseTextures && !doesFileExist)
     entry->texture->Save(filename, level);
 
   if (g_ActiveConfig.bResizeTextureForDumps && !doesCustomFileExist)
