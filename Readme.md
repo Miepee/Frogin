@@ -1,6 +1,8 @@
 # Frogin
 A fork of Dolphin, a GameCube and Wii Emulator, that while dumping custom textures automatically creates a frog the size of the texture it dumped. Go to `Graphics` -> `Advanced` -> `Resize Custom Texture for Dumps` to create them, and `Load Custom Textures` to see them in-game while playing.
-If you want to use a different texture than the default twemoji frog, go to `Dolphin's Userpath/Load` and put in / replace the `custom.png` texture in there. 
+If you want to use a different texture than the default Twemoji frog, go to `Dolphin's Userpath/Load` and put in / replace the `custom.png` texture in there. 
+
+The Twemoji frog is licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) and can be found [here](https://github.com/twitter/twemoji/blob/master/assets/svg/1f438.svg).
 
 You can find downloads on the [Release Page](https://github.com/Miepee/Frogin/releases).  
 **Note for Linux users**, you need the following dependencies:
@@ -14,6 +16,7 @@ You can find downloads on the [Release Page](https://github.com/Miepee/Frogin/re
 ## Screenshots
 ![FroginPreview1](https://cdn.discordapp.com/attachments/509717926807601182/850407843916283924/unknown.png)  
 ![FroginPreview2](https://cdn.discordapp.com/attachments/743561070467088505/850411291775336478/unknown.png)
+
 
 Original Dolphin Readme below:
 
